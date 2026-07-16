@@ -1,0 +1,33 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Example production overlay for etcd-backup.
+#
+# Deploy:
+#   oc apply -k ./etcd-backup/overlays/production
+# Preview:
+#   kubectl kustomize ./etcd-backup/overlays/production
+#
+# Customize for your cluster before apply:
+#   - storageClassName / PVC size in pvc-patch.yaml
+#   - control-plane hostname pin in cronjob-patch.yaml (multi-master + RWO)
+#   - image digest under images: below
+
+resources:
+  - ../../base
+
+labels:
+  - pairs:
+      environment: production
+    includeSelectors: false
+
+# Pin support-tools by digest in real environments (replace the digest).
+# images:
+#   - name: registry.redhat.io/rhel9/support-tools
+#     newName: registry.redhat.io/rhel9/support-tools
+#     digest: sha256:REPLACE_WITH_CLUSTER_DIGEST
+
+patches:
+  - path: cronjob-patch.yaml
+  - path: pvc-patch.yaml

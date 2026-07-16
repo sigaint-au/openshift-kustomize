@@ -1,0 +1,25 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Base etcd backup CronJob stack for OpenShift.
+# Prefer consuming via overlays (see ../overlays/production).
+#
+# Direct apply (labs only):
+#   oc apply -k ./etcd-backup/base
+
+namespace: etcd-infra
+
+labels:
+  - pairs:
+      app: etcd-infra
+    includeSelectors: false
+
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - clusterrole.yaml
+  - clusterrolebinding.yaml
+  - configmap.yaml
+  - persistentvolumeclaim.yaml
+  - cronjob.yaml

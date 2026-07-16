@@ -1,0 +1,34 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+spec:
+  # Off-peak production window (cluster local time)
+  schedule: '0 2 * * *'
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 7
+  startingDeadlineSeconds: 900
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 7200
+      template:
+        spec:
+          containers:
+            - name: etcd-backup
+              env:
+                - name: BACKUP_PATH
+                  value: /tmp/etcd_backup/assets
+                - name: BACKUP_SCRIPT
+                  value: /usr/local/bin/cluster-backup.sh
+                # Keep two weeks of daily runs
+                - name: RETENTION_COUNT
+                  value: '14'
+              resources:
+                requests:
+                  cpu: 200m
+                  memory: 512Mi
+                limits:
+                  cpu: '2'
+                  memory: 2Gi

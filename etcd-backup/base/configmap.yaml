@@ -1,0 +1,96 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: etcd-backup-scripts
+  labels:
+    app: etcd-infra
+data:
+  manage-backup: |-
+    #!/usr/bin/bash
+    # Orchestrates host chroot backup and copies artifacts to the PVC.
+    # Requires: privileged pod, hostPath /, hostNetwork (for cluster-backup.sh).
+    set -euo pipefail
+
+    BACKUP_PATH="${BACKUP_PATH:?BACKUP_PATH is required}"
+    BACKUP_SCRIPT="${BACKUP_SCRIPT:-/usr/local/bin/cluster-backup.sh}"
+    RETENTION_COUNT="${RETENTION_COUNT:-5}"
+    DATESTRING="$(date '+%F_%H%M%S')"
+    export DATESTRING BACKUP_SCRIPT
+
+    RUN_DIR="${BACKUP_PATH}/${DATESTRING}"
+    # Unique per-run host paths avoid collisions with leftover dirs from crashed jobs
+    HOST_SCRIPTS_DIR="/host/tmp/backup-scripts-${DATESTRING}"
+    HOST_BACKUP_DIR="/host/tmp/${DATESTRING}"
+    CHROOT_SCRIPTS_DIR="/tmp/backup-scripts-${DATESTRING}"
+
+    cleanup_host() {
+      echo "Cleaning up host staging paths"
+      rm -rf "${HOST_SCRIPTS_DIR}" "${HOST_BACKUP_DIR}"
+    }
+    trap cleanup_host EXIT
+
+    echo "Beginning backup process to ${BACKUP_PATH} (run ${DATESTRING})"
+    mkdir -p "${BACKUP_PATH}"
+    mkdir -p "${HOST_SCRIPTS_DIR}"
+    cp /tmp/backup-scripts/create-backup "${HOST_SCRIPTS_DIR}/create-backup"
+    chmod 0755 "${HOST_SCRIPTS_DIR}/create-backup"
+
+    echo "Entering host chroot to run create-backup"
+    if ! chroot /host "${CHROOT_SCRIPTS_DIR}/create-backup"; then
+      echo "Backup Failed: cluster-backup.sh returned non-zero" >&2
+      exit 1
+    fi
+
+    SRC="${HOST_BACKUP_DIR}/assets/backup"
+    if [[ ! -d "${SRC}" ]]; then
+      echo "Backup Failed: artifacts directory missing at ${SRC}" >&2
+      exit 1
+    fi
+
+    shopt -s nullglob
+    artifacts=("${SRC}"/*)
+    shopt -u nullglob
+    if ((${#artifacts[@]} == 0)); then
+      echo "Backup Failed: no files produced under ${SRC}" >&2
+      exit 1
+    fi
+
+    echo "Backup artifacts:"
+    ls -la "${SRC}"
+
+    mkdir -p "${RUN_DIR}"
+    cp -a "${SRC}/." "${RUN_DIR}/"
+    echo "Backup copied to ${RUN_DIR}"
+
+    # Prune oldest run directories after a successful copy; keep RETENTION_COUNT newest
+    shopt -s nullglob
+    mapfile -t runs < <(ls -1dt "${BACKUP_PATH}"/*/ 2>/dev/null || true)
+    shopt -u nullglob
+    if ((${#runs[@]} > RETENTION_COUNT)); then
+      for old in "${runs[@]:RETENTION_COUNT}"; do
+        echo "Pruning old backup ${old}"
+        rm -rf "${old}"
+      done
+    fi
+
+    echo "Completed backup successfully. Stored runs:"
+    ls -la "${BACKUP_PATH}"
+  create-backup: |-
+    #!/usr/bin/bash
+    # Runs inside the host via chroot; invokes OpenShift cluster-backup.sh.
+    set -euo pipefail
+
+    DATESTRING="${DATESTRING:?DATESTRING is required}"
+    BACKUP_SCRIPT="${BACKUP_SCRIPT:-/usr/local/bin/cluster-backup.sh}"
+
+    if [[ ! -x "${BACKUP_SCRIPT}" ]]; then
+      echo "Backup Failed: ${BACKUP_SCRIPT} not found or not executable on host" >&2
+      exit 1
+    fi
+
+    echo "Beginning backup process in host mount (run ${DATESTRING})"
+    mkdir -p "/tmp/${DATESTRING}"
+    cd "/tmp/${DATESTRING}"
+    echo "Running ${BACKUP_SCRIPT} ./assets/backup"
+    "${BACKUP_SCRIPT}" ./assets/backup

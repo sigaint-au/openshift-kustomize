@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: etcd-backup
+  labels:
+    app: etcd-infra
+spec:
+  accessModes:
+    # RWO is fine with WaitForFirstConsumer (scheduler pins Jobs to the bound node).
+    # Multi-master shared landing zone: switch to ReadWriteMany + NFS/RWX StorageClass.
+    - ReadWriteOnce
+  resources:
+    requests:
+      # Size for ~5 retained runs (snapshot + static_kuberesources tar per run).
+      # Increase for large clusters or longer retention.
+      storage: 20Gi
+  # Uncomment and set for a retain/backup-capable class; omit to use cluster default.
+  # storageClassName: ocs-storagecluster-ceph-rbd

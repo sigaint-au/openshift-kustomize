@@ -1,0 +1,93 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+  labels:
+    app: etcd-infra
+spec:
+  # Daily at 01:00 cluster time. Override via a Kustomize patch/overlay for labs.
+  schedule: '0 1 * * *'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      parallelism: 1
+      backoffLimit: 2
+      # Fail hung chroot/backup runs rather than sticking indefinitely
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app: etcd-infra
+          annotations:
+            # Request the platform SCC that allows privileged + hostPath + hostNetwork.
+            # Required so chroot /host can invoke /usr/local/bin/cluster-backup.sh.
+            openshift.io/scc: node-exporter
+        spec:
+          serviceAccountName: etcd-backup
+          # API token is unused by the backup scripts
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          # hostNetwork: etcd member endpoints and host tooling expect host net namespace
+          hostNetwork: true
+          nodeSelector:
+            node-role.kubernetes.io/master: ''
+          # RWO PVC: once bound, the scheduler keeps subsequent Jobs on the same
+          # node/zone as the volume. For multi-master, use a WaitForFirstConsumer
+          # StorageClass (OCP default for many provisioners) or pin a master:
+          #   nodeSelector:
+          #     kubernetes.io/hostname: <control-plane-hostname>
+          tolerations:
+            - key: node-role.kubernetes.io/master
+              operator: Exists
+              effect: NoSchedule
+          containers:
+            - name: etcd-backup
+              image: registry.redhat.io/rhel9/support-tools:latest
+              imagePullPolicy: IfNotPresent
+              command:
+                - /usr/bin/bash
+                - -c
+                - /tmp/backup-scripts/manage-backup
+              env:
+                - name: BACKUP_PATH
+                  value: /tmp/etcd_backup/assets
+                - name: BACKUP_SCRIPT
+                  value: /usr/local/bin/cluster-backup.sh
+                - name: RETENTION_COUNT
+                  value: '5'
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: '1'
+                  memory: 1Gi
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              volumeMounts:
+                - name: etcd-backup-scripts
+                  mountPath: /tmp/backup-scripts/
+                  readOnly: true
+                - name: host
+                  mountPath: /host
+                - name: etcd-backup-data
+                  mountPath: /tmp/etcd_backup/assets
+          volumes:
+            - name: etcd-backup-scripts
+              configMap:
+                # Executable scripts; not world-writable
+                defaultMode: 0555
+                name: etcd-backup-scripts
+            - name: host
+              # Full host root is required for chroot into RHCOS and cluster-backup.sh
+              hostPath:
+                path: /
+                type: Directory
+            - name: etcd-backup-data
+              persistentVolumeClaim:
+                claimName: etcd-backup
