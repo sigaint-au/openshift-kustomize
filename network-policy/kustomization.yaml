@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Copy this directory into your application repo, set namespace
+# to your project, and apply it alongside your workloads:
+#   oc apply -k ./network-policy
+
+# Change this to your project name.
+namespace: my-app
+
+resources:
+  - allow-from-same-namespace.yaml
+  - allow-from-ingress.yaml
+  - allow-from-monitoring.yaml
+  - allow-dns-egress.yaml

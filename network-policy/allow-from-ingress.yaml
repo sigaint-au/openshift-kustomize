@@ -1,0 +1,24 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-ingress
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    # Lets the OpenShift router reach your pods.
+    # kubernetes.io/metadata.name is set on every namespace,
+    # so this needs no extra labels on openshift-ingress.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+      # Open to all pod ports so the template works on drop-in.
+      # Restrict ports: uncomment and set your container ports.
+      # ports:
+      #   - protocol: TCP
+      #     port: 8080
+      #   - protocol: TCP
+      #     port: 8443

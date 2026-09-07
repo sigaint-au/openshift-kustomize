@@ -1,0 +1,8 @@
+---
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: BaselineAdminNetworkPolicy
+metadata:
+  name: default
+  annotations:
+    # Sends allow and deny verdicts for this policy to the audit log.
+    k8s.ovn.org/acllogging: '{ "deny": "alert", "allow": "alert" }'

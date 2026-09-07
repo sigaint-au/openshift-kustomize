@@ -1,0 +1,36 @@
+---
+apiVersion: k8s.ovn.org/v1
+kind: EgressFirewall
+metadata:
+  # One object per project, and the name must be "default".
+  name: default
+spec:
+  # First matching rule wins. List Allows first, close with Deny.
+  egress:
+    # Reach your container registry. Replace with the registries
+    # your pods pull runtime content from at run time. (Image pulls
+    # by the node kubelet ignore this object.)
+    - type: Allow
+      to:
+        dnsName: quay.io
+    # Reach an outside API over HTTPS only.
+    - type: Allow
+      to:
+        dnsName: api.example.com
+      ports:
+        - protocol: TCP
+          port: 443
+    # Reach the cluster API servers. Find the range first:
+    #   oc get ep kubernetes -n default
+    # Then uncomment and set it.
+    # - type: Allow
+    #   to:
+    #     cidrSelector: 172.30.0.0/16
+    # Close everything else. Add your Allow rules above this line
+    # before you apply, or your app loses every outside connection.
+    - type: Deny
+      to:
+        cidrSelector: 0.0.0.0/0
+  # Local cluster DNS keeps working: dnsName rules do not affect
+  # CoreDNS resolution. If your pods use an outside DNS server,
+  # allow its IP addresses here or name resolution breaks.

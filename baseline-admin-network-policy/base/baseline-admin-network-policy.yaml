@@ -1,0 +1,33 @@
+---
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: BaselineAdminNetworkPolicy
+metadata:
+  # Singleton object. The API server only accepts the name "default".
+  name: default
+spec:
+  # Applies only to namespaces you label network-isolation=strict.
+  # Label a project to enroll it:
+  #   oc label namespace my-app network-isolation=strict
+  subject:
+    namespaces:
+      matchLabels:
+        network-isolation: strict
+  ingress:
+    # Drops all pod-to-pod ingress. Your own NetworkPolicy
+    # objects still win: BaselineAdminNetworkPolicy sits below
+    # them, so each project opens exactly what it needs.
+    - name: deny-all-ingress
+      action: Deny
+      from:
+        - namespaces: {}
+  egress:
+    # Drops all pod-to-pod egress, including DNS. The project
+    # template re-opens DNS and same-namespace traffic.
+    - name: deny-all-egress-to-pods
+      action: Deny
+      to:
+        - namespaces: {}
+  # Traffic to addresses outside the cluster is not covered here.
+  # Control that with EgressFirewall or EgressIP instead.
+  # A networks peer (for example 0.0.0.0/0) exists in the API but
+  # still ships as experimental support, so this base leaves it out.
