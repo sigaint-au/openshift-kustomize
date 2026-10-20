@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: eso-cluster-001a
+  annotations:
+    openshift.io/description: >-
+      Hub namespace hosting secrets for managed cluster cluster-001a.
+      SA eso-reader has read-only access.  Do not store cluster-agnostic
+      secrets here.
+    openshift.io/display-name: "ESO Hub – cluster-001a"

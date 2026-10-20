@@ -1,0 +1,32 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Managed-cluster overlay for cluster-001a.
+#
+# Overrides:
+#   - Hub API URL
+#   - Hub CA bundle (base64)
+#   - remoteNamespace (must match the hub namespace)
+#
+# The token secret is NOT patched here.  See README for how to
+# inject the bearer token without committing it to Git.
+#
+# Apply (on the managed cluster):
+#   oc apply -k ./external-secrets-store/managed/overlays/cluster-001a
+#
+# Preview:
+#   kubectl kustomize ./external-secrets-store/managed/overlays/cluster-001a
+#
+# Re-create the token after applying if you haven't set it yet:
+#   oc delete secret hub-token -n external-secrets
+#   oc create secret generic hub-token -n external-secrets \
+#     --from-literal=token=$(cat ~/token-cluster-001a)
+
+namespace: external-secrets
+
+resources:
+  - ../../base
+
+patches:
+  - path: patches.yaml

@@ -1,0 +1,29 @@
+---
+# Strategic merge patch.
+# Overrides the hub-store ClusterSecretStore with this cluster's values.
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: hub-store
+spec:
+  provider:
+    kubernetes:
+      server:
+        # Hub cluster API URL.  Change to your hub's real address.
+        url: https://api.hub-cluster.example.com:6443
+        # Base64-encoded CA certificate of the hub cluster.
+        # Get it from the hub:
+        #   oc config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}'
+        caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUV...
+      remoteNamespace: eso-cluster-001a
+  # Only these namespaces on the managed cluster may reference
+  # hub-store in their ExternalSecret / SecretStore.
+  # Each entry is an OR condition; add more entries to add more
+  # allowed namespaces.
+  conditions:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: app-team-a
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: app-team-b

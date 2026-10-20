@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Managed-cluster base for External Secrets Operator (ESO).
+#
+# Three resources:
+#   - ClusterSecretStore pointing at the hub, locked to one namespace.
+#   - Secret hub-token (placeholder – replace with a real token).
+#   - Example ExternalSecret that pulls a secret from the hub.
+#
+# The default namespace on the managed cluster is "external-secrets".
+# Override it in your overlay if ESO runs in a different namespace.
+#
+# Do not apply this base directly; use an overlay that provides
+# cluster-specific patches for the hub URL, CA bundle, and
+# remoteNamespace.
+
+namespace: external-secrets
+
+resources:
+  - cluster-secret-store.yaml
+  - token-secret.yaml
+  - external-secret-example.yaml

@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Hub RBAC base for one managed cluster.  No namespace is set here;
+# the overlay sets it to eso-<cluster-name>.
+#
+# Each managed cluster gets its own copy of these three objects in
+# a dedicated namespace.  Apply per cluster:
+#   oc apply -k ./hub/overlays/<cluster-name>
+
+resources:
+  - serviceaccount.yaml
+  - role.yaml
+  - rolebinding.yaml

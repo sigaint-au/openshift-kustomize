@@ -1,0 +1,15 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: eso-reader
+rules:
+  # Read secrets pushed to this namespace for the managed cluster.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+  # Required by the Kubernetes provider to authorise itself
+  # against the hub cluster's API.
+  - apiGroups: ["authorization.k8s.io"]
+    resources: ["selfsubjectrulesreviews", "selfsubjectaccessreviews"]
+    verbs: ["create"]
