@@ -1,0 +1,23 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Set namespace to where RHACS Central runs (usually "stackrox").
+# The SecurityPolicy CRD is namespaced — the RHACS config controller
+# watches for policies in Central's namespace.
+namespace: stackrox
+
+# Remove policies you don't need before applying.
+resources:
+  - privileged-containers.yaml
+  - run-as-root.yaml
+  - host-network.yaml
+  - latest-image-tag.yaml
+  - container-runtime-socket.yaml
+  - sensitive-host-mounts.yaml
+  - read-only-root-fs.yaml
+  - unscanned-images.yaml
+  - cap-sys-admin.yaml
+  - privilege-escalation.yaml
+  - resource-limits.yaml
+  - mount-propagation.yaml

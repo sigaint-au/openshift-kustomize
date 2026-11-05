@@ -1,0 +1,39 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: resource-limits
+spec:
+  policyName: No CPU Request or Memory Limit Specified
+  description: >-
+    Alert on deployments with containers that lack a CPU request or
+    memory limit. Unbound containers can starve other workloads or
+    cause node out-of-memory conditions.
+  rationale: >-
+    A container without a CPU request may be starved for CPU time
+    when the node is under load. A container without a memory limit
+    can exhaust node memory and trigger OOM kills across the node.
+  remediation: >-
+    Set spec.containers[].resources.requests.cpu and
+    spec.containers[].resources.limits.memory for every container.
+  categories:
+    - DevOps Best Practices
+    - Docker CIS
+  lifecycleStages:
+    - DEPLOY
+  severity: MEDIUM_SEVERITY
+  disabled: false
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: Resource Limits Check
+      policyGroups:
+        - fieldName: Container CPU Limit
+          values:
+            - value: "0"
+        - fieldName: Container Memory Limit
+          values:
+            - value: "0"

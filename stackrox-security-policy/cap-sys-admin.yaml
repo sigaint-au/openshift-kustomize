@@ -1,0 +1,36 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: cap-sys-admin
+spec:
+  policyName: CAP_SYS_ADMIN Capability Added
+  description: >-
+    Alert on deployments with containers that have the
+    CAP_SYS_ADMIN capability. This capability grants broad kernel-level
+    access and is a common container escape vector.
+  rationale: >-
+    CAP_SYS_ADMIN grants an elevated level of privilege that includes
+    mount, namespace, and kernel-module operations. Most workloads
+    do not need it.
+  remediation: >-
+    Drop the CAP_SYS_ADMIN capability if it is not needed. If
+    the workload requires specific capabilities, drop ALL and add
+    only the specific capabilities it needs.
+  categories:
+    - Privileges
+  lifecycleStages:
+    - DEPLOY
+  severity: MEDIUM_SEVERITY
+  disabled: false
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: CAP_SYS_ADMIN Check
+      policyGroups:
+        - fieldName: Add Capabilities
+          values:
+            - value: SYS_ADMIN

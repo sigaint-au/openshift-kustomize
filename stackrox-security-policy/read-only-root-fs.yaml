@@ -1,0 +1,38 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: read-only-root-fs
+spec:
+  policyName: Container Using Read-Write Root Filesystem
+  description: >-
+    Alert on deployments with containers using a writable root
+    filesystem rather than read-only.
+  rationale: >-
+    A writable root filesystem lets an attacker modify binaries,
+    libraries, or configuration files inside the container after
+    compromise. Read-only root filesystem prevents this by design.
+  remediation: >-
+    Set securityContext.readOnlyRootFilesystem: true in the container
+    security context. Mount writable directories as volumes (emptyDir,
+    PVC) where the application writes data.
+  categories:
+    - Security Best Practices
+  lifecycleStages:
+    - DEPLOY
+  severity: MEDIUM_SEVERITY
+  disabled: true
+  # shortcut: disabled by default because containers usually have
+  # writable rootfs; enable after reviewing violations in inform
+  # mode so the noise doesn't drown real policy hits.
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: Root Filesystem Mode Check
+      policyGroups:
+        - fieldName: Read-Only Root Filesystem
+          values:
+            - value: "false"

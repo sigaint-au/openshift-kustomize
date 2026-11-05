@@ -1,0 +1,39 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: privilege-escalation
+spec:
+  policyName: Container with Privilege Escalation Allowed
+  description: >-
+    Alert on deployments with containers that have
+    allowPrivilegeEscalation set to true. In Kubernetes this
+    setting defaults to true and lets a process run with more
+    privileges than its parent.
+  rationale: >-
+    AllowPrivilegeEscalation controls whether a process can gain
+    more privileges than its parent process. When true, a
+    compromised low-privilege process can escalate to root within
+    the container.
+  remediation: >-
+    Set allowPrivilegeEscalation to false in the container's
+    securityContext. This is required for
+    securityContext.runAsNonRoot to take effect.
+  categories:
+    - Security Best Practices
+    - Privileges
+  lifecycleStages:
+    - DEPLOY
+  severity: MEDIUM_SEVERITY
+  disabled: false
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: Privilege Escalation Check
+      policyGroups:
+        - fieldName: Allow Privilege Escalation
+          values:
+            - value: "true"

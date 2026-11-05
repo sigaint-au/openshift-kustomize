@@ -1,0 +1,37 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: latest-image-tag
+spec:
+  policyName: Latest Image Tag
+  description: >-
+    Alert on deployments using images tagged 'latest'. The latest tag
+    is mutable and can pull heterogeneous versions across replicas or
+    redeploys.
+  rationale: >-
+    The latest tag makes deployments unreproducible. Image caches on
+    nodes can pin stale versions, and rolling back requires knowing
+    what the previous latest resolved to.
+  remediation: >-
+    Pin images to a specific version tag (semver or commit SHA). Use
+    your CI/CD pipeline to tag each build uniquely.
+  categories:
+    - DevOps Best Practices
+    - Supply Chain Security
+  lifecycleStages:
+    - BUILD
+    - DEPLOY
+  severity: LOW_SEVERITY
+  disabled: false
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: Latest Tag Check
+      policyGroups:
+        - fieldName: Image Tag
+          values:
+            - value: latest

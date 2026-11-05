@@ -1,0 +1,37 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: mount-propagation
+spec:
+  policyName: Mount Propagation Mode Enabled
+  description: >-
+    Alert on deployments that mount volumes with Bidirectional
+    mount propagation. This mode allows mounts made in the
+    container to propagate back to the host and to other
+    containers on the same node.
+  rationale: >-
+    Bidirectional mount propagation breaks the container's
+    filesystem isolation. A process in the container can mount
+    host paths and propagate them to every other container
+    sharing that volume, enabling lateral movement.
+  remediation: >-
+    Do not set mountPropagation to Bidirectional. Use HostToContainer
+    or None if the volume must be shared.
+  categories:
+    - Docker CIS
+  lifecycleStages:
+    - DEPLOY
+  severity: MEDIUM_SEVERITY
+  disabled: false
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: Mount Propagation Check
+      policyGroups:
+        - fieldName: Mount Propagation
+          values:
+            - value: BIDIRECTIONAL

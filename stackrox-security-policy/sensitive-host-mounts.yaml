@@ -1,0 +1,39 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: sensitive-host-mounts
+spec:
+  policyName: Mounting Sensitive Host Directories
+  description: >-
+    Alert on deployments that mount sensitive host directories
+    (/etc, /sys, /dev, /proc, /var). An attacker who gains code
+    execution in the container can modify host files, install
+    kernel modules, or pivot to other workloads.
+  rationale: >-
+    Mounting system directories from the host gives a compromised
+    container access to sensitive host files. This expands the
+    attack surface and can lead to host-level compromise if the
+    host is not hardened.
+  remediation: >-
+    Do not mount the listed host directories unless the workload
+    explicitly requires it. If a mount is needed (node agent, log
+    collector), exclude the deployment and restrict the mount to
+    read-only when possible.
+  categories:
+    - Security Best Practices
+  lifecycleStages:
+    - DEPLOY
+  severity: MEDIUM_SEVERITY
+  disabled: false
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: Sensitive Host Mount Check
+      policyGroups:
+        - fieldName: Volume Source
+          values:
+            - value: (/etc/.*|/sys/.*|/dev/.*|/proc/.*|/var/.*)

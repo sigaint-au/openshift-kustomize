@@ -1,0 +1,38 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: unscanned-images
+spec:
+  policyName: Images with No Scans
+  description: >-
+    Alert on deployments with images that have not been scanned for
+    vulnerabilities. Disable this policy until you have scan integrations
+    configured in Central.
+  rationale: >-
+    Without a scan, there is no vulnerability information for
+    this image.
+  remediation: >-
+    Configure registry and scanner integrations so that StackRox can
+    obtain scans for your images.
+  categories:
+    - Vulnerability Management
+    - Supply Chain Security
+  lifecycleStages:
+    - DEPLOY
+  severity: MEDIUM_SEVERITY
+  disabled: true
+  # shortcut: disabled by default because it fires on every deployment
+  # that hasn't been scanned yet; enable after registries and scanner
+  # are connected in Central.
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: Scan Check
+      policyGroups:
+        - fieldName: Unscanned Image
+          values:
+            - value: "true"

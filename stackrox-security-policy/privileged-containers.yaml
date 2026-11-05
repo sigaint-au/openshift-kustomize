@@ -1,0 +1,38 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: privileged-containers
+spec:
+  policyName: Privileged Containers
+  description: >-
+    Alert on deployments running containers in privileged mode.
+    Privileged containers bypass kernel isolation, making container
+    escape trivial.
+  rationale: >-
+    A privileged container has unrestricted access to host resources.
+    Any process that compromises the container can reach the host
+    kernel, devices, and namespaces. Remove securityContext.privileged
+    unless the workload genuinely needs host-level access.
+  remediation: >-
+    Set securityContext.privileged to false. If the workload needs
+    elevated capabilities, drop ALL and add only the specific
+    capabilities it requires.
+  categories:
+    - Security Best Practices
+    - Privileges
+  lifecycleStages:
+    - DEPLOY
+  severity: HIGH_SEVERITY
+  disabled: false
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: Privileged Mode Check
+      policyGroups:
+        - fieldName: Privileged Container
+          values:
+            - value: "true"

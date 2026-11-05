@@ -1,0 +1,35 @@
+---
+apiVersion: config.stackrox.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: host-network
+spec:
+  policyName: Host Network Namespace Shared
+  description: >-
+    Alert on deployments that share the host network namespace.
+    The container gets full access to the host's network stack, interfaces,
+    and ability to bind to privileged ports.
+  rationale: >-
+    Shared host networking removes network isolation. A compromised
+    container can access localhost services (D-Bus, metadata endpoints,
+    other agents) and bind any port on the host.
+  remediation: >-
+    Remove hostNetwork: true from the pod spec. Use a regular pod
+    network with a Service for access.
+  categories:
+    - Security Best Practices
+  lifecycleStages:
+    - DEPLOY
+  severity: MEDIUM_SEVERITY
+  disabled: false
+  exclusions:
+    - name: Exclude system namespaces
+      deployment:
+        scope:
+          namespace: ^kube.*|^openshift.*|^redhat.*|^istio-system$|^gitops-pipelines$
+  policySections:
+    - sectionName: Host Network Check
+      policyGroups:
+        - fieldName: Host Network
+          values:
+            - value: "true"
