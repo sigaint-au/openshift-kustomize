@@ -16,7 +16,7 @@ The base object denies all pod-to-pod ingress and egress in namespaces
 you label `network-isolation=strict`. Your per-project NetworkPolicy
 objects override the baseline, so each project opens its own traffic.
 Those policies live in the [network-policy](../network-policy/)
-snippet: same-namespace, router, monitoring, and DNS allows you copy
+snippet: same-namespace, router, monitoring, and DNS. Copy them
 into your app repo.
 
 ## Requirements
@@ -63,7 +63,7 @@ app before you move to the next.
 
 ## Open traffic with the network-policy snippet
 
-The baseline alone leaves enrolled projects silent. Copy the
+The baseline leaves enrolled projects silent. Copy the
 [network-policy](../network-policy/) snippet into your app repo and
 apply it with your workloads. It holds the four allows (same-namespace,
 router, monitoring, DNS) plus test and port-restriction examples.

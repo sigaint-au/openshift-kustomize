@@ -79,10 +79,10 @@ external-secrets-store/
 
 Add a new cluster by copying an overlay directory and changing the
 cluster name in:
-- `namespace.yaml` (hub) – the Namespace name
-- `kustomization.yaml` (hub) – the `namespace:` field
-- `patches.yaml` (managed) – the `remoteNamespace` value
-- `kustomization.yaml` (managed) – the namespace value if it differs
+- `namespace.yaml` (hub): the Namespace name
+- `kustomization.yaml` (hub): the `namespace:` field
+- `patches.yaml` (managed): the `remoteNamespace` value
+- `kustomization.yaml` (managed): the namespace value if it differs
 
 ## Requirements
 

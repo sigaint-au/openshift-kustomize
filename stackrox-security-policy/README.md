@@ -1,13 +1,13 @@
 # stackrox-security-policy
 
 You deploy a sensible baseline of StackRox / RHACS security policies
-via kustomize and GitOps. Each policy is a separate file — drop the
+via kustomize and GitOps. Each policy is a separate file. Drop the
 ones you don't need, add enforcement after you've tested in inform
 mode.
 
 Policies apply to every deployment in every cluster Central monitors.
 Use exclusions (in the YAML or RHACS UI) for workloads that
-legitimately need elevated access.
+need elevated access.
 
 ## What you get
 
@@ -120,7 +120,7 @@ reconciliation cycle (up to 10 minutes).
 
 ## Common policies
 
-The shipped set covers the most impactful deploy-time checks from the
+The shipped set covers the most common deploy-time checks from the
 Red Hat default-enabled baseline. Below are additional policies you'll
 commonly want, with their field names for writing new CRs.
 

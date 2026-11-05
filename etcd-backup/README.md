@@ -36,9 +36,9 @@ Preview with `kubectl kustomize ./base` or `kubectl kustomize ./overlays/product
 
 ## Before production apply
 
-1. `overlays/production/pvc-patch.yaml` — `storageClassName` and size  
-2. `overlays/production/cronjob-patch.yaml` — schedule, retention, optional hostname pin  
-3. `overlays/production/kustomization.yaml` — image digest under `images:`
+1. `overlays/production/pvc-patch.yaml`: `storageClassName` and size  
+2. `overlays/production/cronjob-patch.yaml`: schedule, retention, optional hostname pin  
+3. `overlays/production/kustomization.yaml`: image digest under `images:`
 
 ## Custom overlay
 

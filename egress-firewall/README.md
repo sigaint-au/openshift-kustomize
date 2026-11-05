@@ -55,8 +55,7 @@ oc -n my-app run netcheck --rm -i --restart=Never \
 ```
 
 If your pods use an outside DNS server instead of cluster DNS, allow
-its IP addresses in the firewall or name resolution breaks alongside
-everything else.
+its IP addresses in the firewall or name resolution breaks.
 
 ## Pair with
 
